@@ -1,26 +1,33 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
-import os
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
 
-# Initialize extensions
-db = SQLAlchemy()
+def register_blueprints(app):
+    """Register all blueprints for the application"""
+    from flask_app.routes import api_bp
+    
+    app.register_blueprint(api_bp)  # API routes under /api/v1/
+    
+    logger.info(f'Registered blueprints: {[bp.name for bp in app.blueprints.values()]}')
 
 def create_app():
+    """Application factory function"""
+    # Log the module name and root path
+    logger.info(f'Creating Flask app with module name: {__name__}')
+    
     app = Flask(__name__)
-    
-    # Configure PostgreSQL Database
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://localhost/pingdom_db')
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    
-    # Initialize extensions
-    db.init_app(app)
+    logger.info(f'App root path: {app.root_path}')
+    logger.info(f'Static folder: {app.static_folder}')
+    logger.info(f'Template folder: {app.template_folder}')
     
     # Register blueprints
-    from flask_app.routes import api_bp
-    app.register_blueprint(api_bp)
+    register_blueprints(app)
     
     return app
