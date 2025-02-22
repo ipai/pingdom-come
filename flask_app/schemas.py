@@ -1,29 +1,71 @@
+"""Marshmallow schemas for request/response validation and serialization."""
+
 from marshmallow import Schema, fields
 
+__all__ = [
+    'EndpointSchema',
+    'StatusSchema',
+    'EchoSchema',
+    'DataRequestSchema',
+    'DataResponseSchema',
+    'ErrorSchema',
+]
+
 class EndpointSchema(Schema):
-    """Schema for API endpoint information"""
-    available_endpoints = fields.Dict(keys=fields.Str(), values=fields.Str())
+    """Available API endpoints listing."""
+    available_endpoints = fields.Dict(
+        keys=fields.Str(),
+        values=fields.Str(),
+        description="Map of endpoint names to their descriptions"
+    )
 
 class StatusSchema(Schema):
-    """Schema for API status response"""
-    status = fields.Str(required=True)
-    timestamp = fields.DateTime(required=True)
+    """API health status response."""
+    status = fields.Str(
+        required=True,
+        description="Current API health status"
+    )
+    timestamp = fields.DateTime(
+        required=True,
+        description="Time when status was checked"
+    )
 
 class EchoSchema(Schema):
-    """Schema for echo message response"""
-    message = fields.Str(required=True)
-    received_at = fields.DateTime(required=True)
+    """Echo message response."""
+    message = fields.Str(
+        required=True,
+        description="Message that was echoed back"
+    )
+    received_at = fields.DateTime(
+        required=True,
+        description="Time when message was received"
+    )
 
 class DataRequestSchema(Schema):
-    """Schema for data request payload"""
-    data = fields.Dict(required=True)
+    """JSON data request payload."""
+    data = fields.Dict(
+        required=True,
+        description="JSON data to be processed"
+    )
 
 class DataResponseSchema(Schema):
-    """Schema for data response"""
-    received_data = fields.Dict(required=True)
-    status = fields.Str(required=True)
+    """Processed data response."""
+    received_data = fields.Dict(
+        required=True,
+        description="Data that was received and processed"
+    )
+    status = fields.Str(
+        required=True,
+        description="Processing status"
+    )
 
 class ErrorSchema(Schema):
-    """Schema for error responses"""
-    error = fields.Str(required=True)
-    status_code = fields.Int(required=True)
+    """API error response."""
+    error = fields.Str(
+        required=True,
+        description="Error message"
+    )
+    status_code = fields.Int(
+        required=True,
+        description="HTTP status code"
+    )

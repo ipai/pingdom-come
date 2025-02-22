@@ -1,66 +1,75 @@
-from flask import Blueprint, jsonify, request
 from datetime import datetime, timezone
-from marshmallow import ValidationError
-from .schemas import *
 
-# Create a blueprint with a url_prefix
+from flask import Blueprint, jsonify, request
+from flask_apispec import doc, marshal_with, use_kwargs
+from marshmallow import ValidationError
+
+from .schemas import (
+    DataRequestSchema, DataResponseSchema, EchoSchema,
+    EndpointSchema, ErrorSchema, StatusSchema
+)
+
+# Create API blueprint
 api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
 
-# Root route to show available endpoints
 @api_bp.route('/', methods=['GET'])
+@doc(tags=['API'], description='List all available API endpoints')
+@marshal_with(EndpointSchema)
 def api_root():
+    """List all available API endpoints."""
     endpoints = {
         'available_endpoints': {
             'status': '/api/v1/status - Get API status',
-            'echo': '/api/v1/echo/<message> - Echo back a message',
+            'echo': '/api/v1/echo/<message> - Echo a message',
             'data': '/api/v1/data - POST endpoint for JSON data'
         }
     }
     return jsonify(EndpointSchema().dump(endpoints))
 
-# Example route using GET method
 @api_bp.route('/status', methods=['GET'])
+@doc(tags=['API'], description='Get current API status')
+@marshal_with(StatusSchema)
 def get_status():
-    status_data = {
+    """Get current API status."""
+    return jsonify(StatusSchema().dump({
         'status': 'healthy',
         'timestamp': datetime.now(timezone.utc)
-    }
-    return jsonify(StatusSchema().dump(status_data))
+    }))
 
-# Example route with parameters
 @api_bp.route('/echo/<message>', methods=['GET'])
+@doc(tags=['API'],
+     description='Echo back a message',
+     params={'message': {'description': 'Message to echo back', 'type': 'string'}})
+@marshal_with(EchoSchema)
 def echo_message(message):
-    message_data = {
+    """Echo back a message."""
+    return jsonify(EchoSchema().dump({
         'message': message,
         'received_at': datetime.now(timezone.utc)
-    }
-    return jsonify(EchoSchema().dump(message_data))
+    }))
 
-# Example route using POST method with JSON data
 @api_bp.route('/data', methods=['POST'])
+@doc(tags=['API'], description='Process JSON data')
+@use_kwargs(DataRequestSchema, location='json')
+@marshal_with(DataResponseSchema)
 def receive_data():
+    """Process JSON data."""
     try:
-        # Validate request data
         request_data = DataRequestSchema().load(request.get_json())
-        
-        # Prepare and validate response
-        response_data = {
+        return jsonify(DataResponseSchema().dump({
             'received_data': request_data['data'],
             'status': 'success'
-        }
-        return jsonify(DataResponseSchema().dump(response_data))
-    except ValidationError as err:
-        error_response = {
+        }))
+    except ValidationError:
+        return jsonify(ErrorSchema().dump({
             'error': 'Invalid request data',
             'status_code': 400
-        }
-        return jsonify(ErrorSchema().dump(error_response)), 400
+        })), 400
 
-# Example error handler for this blueprint
 @api_bp.errorhandler(404)
 def handle_404(error):
-    error_data = {
+    """Handle 404 Not Found errors."""
+    return jsonify(ErrorSchema().dump({
         'error': 'Resource not found',
         'status_code': 404
-    }
-    return jsonify(ErrorSchema().dump(error_data)), 404
+    })), 404
