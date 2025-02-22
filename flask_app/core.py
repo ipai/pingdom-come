@@ -64,27 +64,35 @@ def create_app(config=None):
     # Initialize core extensions
     db.init_app(app)
     migrate.init_app(app, db)
-    
+
     # Configure and enable CORS before registering any routes
-    allowed_origins = os.getenv('ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
-    domain_patterns = os.getenv('ALLOWED_DOMAIN_PATTERNS', '.vercel.app').split(',')
-    
-    CORS(app, resources={
-        r"/api/v1/*": {
-            "origins": [*allowed_origins,  # Exact matches
-                      # Add pattern-based origins (all subdomains)
-                      *[f'https://*.{pattern.lstrip(".*")}'
-                        for pattern in domain_patterns if pattern]],
-            "methods": ["GET", "POST", "OPTIONS"],
-            "allow_headers": ["Content-Type", "Authorization"],
-            "supports_credentials": True
-        }
-    })
+    allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+    domain_patterns = os.getenv("ALLOWED_DOMAIN_PATTERNS", ".vercel.app").split(",")
+
+    CORS(
+        app,
+        resources={
+            r"/api/v1/*": {
+                "origins": [
+                    *allowed_origins,  # Exact matches
+                    # Add pattern-based origins (all subdomains)
+                    *[
+                        f'https://*.{pattern.lstrip(".*")}'
+                        for pattern in domain_patterns
+                        if pattern
+                    ],
+                ],
+                "methods": ["GET", "POST", "OPTIONS"],
+                "allow_headers": ["Content-Type", "Authorization"],
+                "supports_credentials": True,
+            }
+        },
+    )
 
     # Register routes and documentation after CORS is configured
     app.register_blueprint(api_bp)
     docs = FlaskApiSpec(app)
-    
+
     with app.test_request_context():
         register_api_docs(docs)
 

@@ -9,9 +9,13 @@ A system that aggregates data from multiple sources (Cloudflare, Vercel, GitHub,
    . venv/bin/activate  # On Windows use: venv\Scripts\activate
    ```
 
-2. Install dependencies:
+2. Install the project:
    ```bash
-   pip install -r requirements.txt
+   # For development (includes all dev tools)
+   pip install -e ".[dev]"
+
+   # For production (minimal dependencies)
+   pip install .
    ```
 
 3. Set up PostgreSQL:
@@ -30,12 +34,31 @@ A system that aggregates data from multiple sources (Cloudflare, Vercel, GitHub,
 
 The application will be available at http://localhost:5000
 
-## Database Management
+## Project Structure
 
-### Creating Models
+- Dependencies are managed in `pyproject.toml`:
+  - Production dependencies under `[project.dependencies]`
+  - Development tools under `[project.optional-dependencies.dev]`
+  - Build configuration under `[build-system]`
+
+- Version information is in `flask_app/__init__.py`
+
+## Development
+
+### Dependencies
+- All dependencies are managed in `pyproject.toml`
+- For development, install with `pip install -e ".[dev]"` to get:
+  - Code formatting (black)
+  - Linting (flake8)
+  - Import sorting (isort)
+  - Other development tools
+
+### Database Management
+
+#### Creating Models
 Create your models in `flask_app/models.py`.
 
-### Managing Migrations
+#### Managing Migrations
 ```bash
 # After modifying models, create a new migration
 flask db migrate -m "Description of changes"
@@ -48,7 +71,17 @@ flask db downgrade
 
 # View migration history
 flask db history
+```
 
+### Building the Package
+To create a distributable package:
+```bash
+python -m build
+```
+
+This creates:
+- A wheel file (`.whl`) in `dist/` for pip installation
+- A source distribution (`.tar.gz`) for distribution
 # Show current migration
 flask db current
 ```

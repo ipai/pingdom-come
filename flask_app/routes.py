@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, request
 from flask_apispec import FlaskApiSpec, doc, marshal_with, use_kwargs
 from marshmallow import ValidationError
 
