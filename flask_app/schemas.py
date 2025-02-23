@@ -53,10 +53,3 @@ class DataResponseSchema(Schema):
         required=True, description="Data that was received and processed"
     )
     status = fields.Str(required=True, description="Processing status")
-
-
-class ErrorSchema(Schema):
-    """API error response."""
-
-    error = fields.Str(required=True, description="Error message")
-    status_code = fields.Int(required=True, description="HTTP status code")

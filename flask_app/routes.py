@@ -11,7 +11,6 @@ from .schemas import (
     DataResponseSchema,
     EchoSchema,
     EndpointSchema,
-    ErrorSchema,
     StatusSchema,
 )
 
@@ -72,8 +71,11 @@ def echo_message(message):
 @doc(tags=["API"], description="Process JSON data")
 @use_kwargs(DataRequestSchema, location="json")
 @marshal_with(DataResponseSchema)
-def receive_data():
+def receive_data(data):
     """Process incoming JSON data.
+
+    Args:
+        data: The JSON data received from the request.
 
     Returns:
         dict: Processed data response.
@@ -82,24 +84,9 @@ def receive_data():
         ValidationError: If the request data is invalid.
     """
     try:
-        request_data = request.get_json()
-        return {"received_data": request_data["data"], "status": "success"}
+        return {"received_data": data, "status": "success"}
     except ValidationError:
         return {"error": "Invalid request data", "status_code": 400}, 400
-
-
-@api_bp.errorhandler(404)
-@marshal_with(ErrorSchema)
-def handle_404(error):
-    """Handle 404 Not Found errors.
-
-    Args:
-        error: The error that triggered this handler.
-
-    Returns:
-        tuple: Error response and 404 status code.
-    """
-    return {"error": "Resource not found", "status_code": 404}, 404
 
 
 def register_api_docs(docs: FlaskApiSpec) -> None:
