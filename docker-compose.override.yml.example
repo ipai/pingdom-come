@@ -1,0 +1,12 @@
+services:
+  flask-app:
+    environment:
+      - CLOUDFLARE_API_KEY=your_api_key_here
+      - CLOUDFLARE_EMAIL=your_email_here
+      - CLOUDFLARE_ZONE_ID=your_zone_id_here
+
+  temporal-worker:
+    environment:
+      - CLOUDFLARE_API_KEY=your_api_key_here
+      - CLOUDFLARE_EMAIL=your_email_here
+      - CLOUDFLARE_ZONE_ID=your_zone_id_here

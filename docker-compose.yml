@@ -1,0 +1,93 @@
+services:
+  postgresql:
+    container_name: postgresql
+    image: postgres:16
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_MULTIPLE_DATABASES=temporal,pingdom
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+    networks:
+      - pingdom-network
+
+  temporal:
+    container_name: temporal
+    image: temporalio/auto-setup:1.27.0
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    environment:
+      - DB=postgres12
+      - DB_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PWD=postgres
+      - POSTGRES_SEEDS=postgresql
+    ports:
+      - "7233:7233"
+    networks:
+      - pingdom-network
+
+  flask-app:
+    container_name: flask-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - PINGDOM_STORE_PASSWORD=postgres
+      - PINGDOM_STORE_DBNAME=pingdom
+      - PINGDOM_STORE_USER=postgres
+      - PINGDOM_STORE_HOST=postgresql
+      - PINGDOM_STORE_PORT=5432
+      - TEMPORAL_HOST=temporal:7233
+    ports:
+      - "8080:5000"
+    networks:
+      - pingdom-network
+    depends_on:
+      - temporal
+
+  temporal-worker:
+    container_name: temporal-worker
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python -m src.temporal.worker
+    environment:
+      - TEMPORAL_HOST=temporal:7233
+    volumes:
+      - .:/app
+    networks:
+      - pingdom-network
+    depends_on:
+      - temporal
+
+  temporal-web:
+    image: temporalio/web:latest
+    platform: linux/amd64
+    environment:
+      - TEMPORAL_GRPC_ENDPOINT=temporal:7233
+      - TEMPORAL_PERMIT_WRITE_API=true
+    ports:
+      - "8088:8088"
+    networks:
+      - pingdom-network
+    depends_on:
+      - temporal
+
+networks:
+  pingdom-network:
+    driver: bridge
+    name: pingdom-network
+
+volumes:
+  postgres-data:
+
